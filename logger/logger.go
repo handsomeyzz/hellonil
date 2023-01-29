@@ -1,7 +1,6 @@
 package logger
 
 import (
-	"hellonil/config"
 	"net"
 	"net/http"
 	"net/http/httputil"
@@ -18,9 +17,23 @@ import (
 
 var lg *zap.Logger
 
+type LogConfig struct {
+	Level      string
+	Filename   string
+	MaxSize    int
+	MaxAge     int
+	MaxBackups int
+}
+
 // Init 初始化lg
 func Init() (err error) {
-	cfg := &config.LogConfig{}
+	cfg := &LogConfig{
+		Level:      "info", //默认info
+		Filename:   "./log.log",
+		MaxSize:    200,
+		MaxAge:     30,
+		MaxBackups: 7,
+	}
 	writeSyncer := getLogWriter(cfg.Filename, cfg.MaxSize, cfg.MaxBackups, cfg.MaxAge)
 	encoder := getEncoder()
 	var l = new(zapcore.Level)

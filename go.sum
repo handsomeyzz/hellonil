@@ -81,6 +81,8 @@ github.com/pkg/diff v0.0.0-20210226163009-20ebb0f2a09e/go.mod h1:pJLUxLENpZxwdsK
 github.com/pkg/errors v0.8.1 h1:iURUrRGxPUNPdy5/HRSm+Yj6okJ6UtLINN0Q9M4+h3I=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
+github.com/rainu/go-command-chain v0.3.0 h1:WzVtjRDhwYXy2KKMNp3v0WPObaaWC1CAsqTxX7AwHYw=
+github.com/rainu/go-command-chain v0.3.0/go.mod h1:RvLsDKnTGD9XoUY7nmBz73ayffI0bFCDH/EVJPRgfks=
 github.com/redis/go-redis/v9 v9.0.0-rc.4 h1:JUhsiZMTZknz3vn50zSVlkwcSeTGPd51lMO3IKUrWpY=
 github.com/redis/go-redis/v9 v9.0.0-rc.4/go.mod h1:Vo3EsyWnicKnSKCA7HhgnvnyA74wOA69Cd2Meli5mmA=
 github.com/rogpeppe/go-internal v1.6.1/go.mod h1:xXDCJY+GAPziupqXw64V24skbSoqbTEfhy4qGm1nDQc=
