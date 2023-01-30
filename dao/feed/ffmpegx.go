@@ -79,7 +79,6 @@ func DealVideo(path string) (videoPath string, picPath string, err error) {
 		}
 	}
 	//保存图片
-	fmt.Println("66666")
 	picPath, err = savePic(videopath)
 	if err != nil {
 		//日志

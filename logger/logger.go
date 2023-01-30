@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"hellonil/setting"
 	"net"
 	"net/http"
 	"net/http/httputil"
@@ -17,23 +18,8 @@ import (
 
 var lg *zap.Logger
 
-type LogConfig struct {
-	Level      string
-	Filename   string
-	MaxSize    int
-	MaxAge     int
-	MaxBackups int
-}
-
 // Init 初始化lg
-func Init() (err error) {
-	cfg := &LogConfig{
-		Level:      "info", //默认info
-		Filename:   "./log.log",
-		MaxSize:    200,
-		MaxAge:     30,
-		MaxBackups: 7,
-	}
+func Init(cfg *setting.LogConfig, mode string) (err error) {
 	writeSyncer := getLogWriter(cfg.Filename, cfg.MaxSize, cfg.MaxBackups, cfg.MaxAge)
 	encoder := getEncoder()
 	var l = new(zapcore.Level)
@@ -42,8 +28,19 @@ func Init() (err error) {
 		return
 	}
 	var core zapcore.Core
-	core = zapcore.NewCore(encoder, writeSyncer, l)
+	if mode == "dev" {
+		// 进入开发模式，日志输出到终端
+		consoleEncoder := zapcore.NewConsoleEncoder(zap.NewDevelopmentEncoderConfig())
+		core = zapcore.NewTee(
+			zapcore.NewCore(encoder, writeSyncer, l),
+			zapcore.NewCore(consoleEncoder, zapcore.Lock(os.Stdout), zapcore.DebugLevel),
+		)
+	} else {
+		core = zapcore.NewCore(encoder, writeSyncer, l)
+	}
+
 	lg = zap.New(core, zap.AddCaller())
+
 	zap.ReplaceGlobals(lg)
 	zap.L().Info("init logger success")
 	return

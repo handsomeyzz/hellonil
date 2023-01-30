@@ -4,19 +4,26 @@ import (
 	"context"
 	"fmt"
 	"github.com/redis/go-redis/v9"
-	"hellonil/config"
+	"hellonil/setting"
 )
 
-var ctx = context.Background()
-var Re *redis.Client
+// 实际生产环境下 context.Background() 按需替换
 
-func Init() error {
-	Re = redis.NewClient(&redis.Options{
-		Addr:     fmt.Sprintf("%s:%d", config.RedisX().Addr, config.RedisX().Port),
-		Password: fmt.Sprintf("%s", config.RedisX().Password), // no password set
-		DB:       0,                                           // use default DB
+var (
+	client *redis.Client
+)
+
+// Init 初始化连接
+func Init(cfg *setting.RedisConfig) (err error) {
+	client = redis.NewClient(&redis.Options{
+		Addr:         fmt.Sprintf("%s:%d", cfg.Host, cfg.Port),
+		Password:     cfg.Password, // no password set
+		DB:           cfg.DB,       // use default DB
+		PoolSize:     cfg.PoolSize,
+		MinIdleConns: cfg.MinIdleConns,
 	})
-	_, err := Re.Ping(context.Background()).Result()
+
+	_, err = client.Ping(context.Background()).Result()
 	if err != nil {
 		return err
 	}
@@ -24,5 +31,5 @@ func Init() error {
 }
 
 func Close() {
-	_ = Re.Close()
+	_ = client.Close()
 }

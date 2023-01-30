@@ -1,28 +1,29 @@
 package mysql
 
 import (
-	"errors"
 	"fmt"
+	"hellonil/setting"
+
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
-	"hellonil/config"
 )
 
-var DB *sqlx.DB
+var db *sqlx.DB
 
-func Init() error {
-	MysqlX := config.MysqlX()
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?parseTime=true&loc=Local",
-		MysqlX.User, MysqlX.Password, MysqlX.Addr, MysqlX.Port, MysqlX.DB)
-	DB, err := sqlx.Connect("mysql", dsn)
+// Init 初始化MySQL连接
+func Init(cfg *setting.MySQLConfig) (err error) {
+	// "user:password@tcp(host:port)/dbname"
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?parseTime=true&loc=Local", cfg.User, cfg.Password, cfg.Host, cfg.Port, cfg.DB)
+	db, err = sqlx.Connect("mysql", dsn)
 	if err != nil {
-		return errors.New("mysql初始化失败")
+		return
 	}
-	DB.SetMaxOpenConns(10)
-	DB.SetMaxIdleConns(100)
-	return nil
+	db.SetMaxOpenConns(cfg.MaxOpenConns)
+	db.SetMaxIdleConns(cfg.MaxIdleConns)
+	return
 }
 
+// Close 关闭MySQL连接
 func Close() {
-	_ = DB.Close()
+	_ = db.Close()
 }
