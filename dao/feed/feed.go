@@ -3,6 +3,7 @@ package feed
 import (
 	"context"
 	"fmt"
+	"github.com/spf13/viper"
 	"github.com/tencentyun/cos-go-sdk-v5"
 	"hellonil/setting"
 	"io"
@@ -33,7 +34,7 @@ func Init(cfg *setting.CosConfig) error {
 
 // 根据视频名字或者图片名字上传视频，targetName:上传服务器时的目标名字 path:需要上传的文件的路径
 // 返回生成之后的url和错误
-func upload(targetName string, path string) {
+func Upload(targetName string, path string) (url string, err error) {
 	f, err := os.Open(path)
 	defer f.Close() //延迟关闭文件
 	if err != nil {
@@ -45,18 +46,20 @@ func upload(targetName string, path string) {
 	_, err = cosClient.Object.Put(ctx, targetName, r, nil)
 	if err != nil {
 		//日志
-		return
+		return "", nil
 	}
 	//删除本地文件
+	u, ok := viper.Get("cos.host").(string)
+	fmt.Println(u)
+	if !ok {
+		fmt.Println("viper类型断言出错了！")
+		return "", nil
+	}
+	url = fmt.Sprintf("%s/%s", u, targetName)
 	err = os.Remove(path)
 	if err != nil {
-		fmt.Println(err)
-		return
+		return "", err
 	}
 
-	return
-}
-
-func UploadAll(vedio string, pic string) {
-
+	return url, nil
 }

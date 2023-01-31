@@ -1,6 +1,7 @@
 package router
 
 import (
+	"hellonil/controller"
 	"hellonil/logger"
 	"net/http"
 
@@ -19,7 +20,9 @@ func SetupRouter(mode string) *gin.Engine {
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(http.StatusOK, "OK!")
 	})
-
+	//r.Group("/douyin")
+	r.POST("/douyin/publish/action", controller.PublishAction)
+	r.POST("/douyin/user/register", controller.Register)
 	pprof.Register(r) // 注册pprof相关路由
 
 	r.NoRoute(func(c *gin.Context) {

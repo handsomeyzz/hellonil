@@ -2,14 +2,13 @@ package jwt
 
 import (
 	"errors"
-	"time"
-
-	"github.com/spf13/viper"
-
+	"fmt"
 	"github.com/dgrijalva/jwt-go"
+	"hellonil/setting"
+	"time"
 )
 
-var mySecret = []byte("hellonil")
+var jwtMsg = &setting.JwtConfig{}
 
 // MyClaims 自定义声明结构体并内嵌jwt.StandardClaims
 // jwt包自带的jwt.StandardClaims只包含了官方字段
@@ -21,22 +20,28 @@ type MyClaims struct {
 	jwt.StandardClaims
 }
 
+func Init(cfg *setting.JwtConfig) {
+	jwtMsg.Issuser = cfg.Issuser
+	jwtMsg.Expire = cfg.Expire
+	jwtMsg.SecretKey = cfg.SecretKey
+}
+
 // GenToken 生成JWT
 func GenToken(userID int64, username string) (string, error) {
 	// 创建一个我们自己的声明的数据
 	c := MyClaims{
 		userID,
-		"username", // 自定义字段
+		username, // 自定义字段
 		jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(
-				time.Duration(viper.GetInt("auth.jwt_expire")) * time.Hour).Unix(), // 过期时间
-			Issuer: "hellonil", // 签发人
+			ExpiresAt: time.Now().Unix() + jwtMsg.Expire, // 过期时间
+			Issuer:    jwtMsg.Issuser,                    // 签发人
+			NotBefore: time.Now().Unix() - 1000,          //1s之前生效
 		},
 	}
 	// 使用指定的签名方法创建签名对象
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, c)
 	// 使用指定的secret签名并获得完整的编码后的字符串token
-	return token.SignedString(mySecret)
+	return token.SignedString([]byte(jwtMsg.SecretKey))
 }
 
 // ParseToken 解析JWT
@@ -44,9 +49,10 @@ func ParseToken(tokenString string) (*MyClaims, error) {
 	// 解析token
 	var mc = new(MyClaims)
 	token, err := jwt.ParseWithClaims(tokenString, mc, func(token *jwt.Token) (i interface{}, err error) {
-		return mySecret, nil
+		return []byte(jwtMsg.SecretKey), nil
 	})
 	if err != nil {
+		fmt.Println(err)
 		return nil, err
 	}
 	if token.Valid { // 校验token

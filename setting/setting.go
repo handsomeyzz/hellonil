@@ -21,6 +21,7 @@ type AppConfig struct {
 	*MySQLConfig `mapstructure:"mysql"`
 	*RedisConfig `mapstructure:"redis"`
 	*CosConfig   `mapstructure:"cos"`
+	*JwtConfig   `mapstructure:"jwtc"`
 }
 type CosConfig struct {
 	Host      string `mapstructure:"host"`
@@ -53,6 +54,11 @@ type LogConfig struct {
 	MaxSize    int    `mapstructure:"max_size"`
 	MaxAge     int    `mapstructure:"max_age"`
 	MaxBackups int    `mapstructure:"max_backups"`
+}
+type JwtConfig struct {
+	Expire    int64  `mapstructure:"jwt_expire"`
+	SecretKey string `mapstructure:"secret_key"`
+	Issuser   string `mapstructure:"is_suser"`
 }
 
 func Init(filePath string) (err error) {

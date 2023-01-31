@@ -6,6 +6,7 @@ import (
 	"hellonil/dao/mysql"
 	"hellonil/dao/redis"
 	"hellonil/logger"
+	"hellonil/pkg/jwt"
 	"hellonil/pkg/snowflake"
 	"hellonil/router"
 	"hellonil/setting"
@@ -19,7 +20,8 @@ import (
 // @contact.url http://www.liwenzhou.com
 
 // @host 127.0.0.1:8084
-func main() {
+
+func Init() {
 	if len(os.Args) < 2 {
 		fmt.Println("need config file.eg: hellonil config.yaml")
 		return
@@ -38,7 +40,6 @@ func main() {
 		return
 	}
 	defer mysql.Close() // 程序退出关闭数据库连接
-	fmt.Println("4")
 	if err := redis.Init(setting.Conf.RedisConfig); err != nil {
 		fmt.Printf("init redis failed, err:%v\n", err)
 		return
@@ -54,7 +55,7 @@ func main() {
 		fmt.Printf("init snowflake failed, err:%v\n", err)
 		return
 	}
-
+	jwt.Init(setting.Conf.JwtConfig)
 	// 注册路由
 	r := router.SetupRouter(setting.Conf.Mode)
 	err := r.Run(fmt.Sprintf(":%d", setting.Conf.Port))
@@ -62,4 +63,9 @@ func main() {
 		fmt.Printf("run server failed, err:%v\n", err)
 		return
 	}
+}
+
+func main() {
+	//获取项目的执行路径
+	Init()
 }
