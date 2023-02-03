@@ -1,13 +1,23 @@
 package controller
 
 import (
-	"fmt"
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 	"hellonil/dao/mysql"
+	"hellonil/models"
 	"hellonil/pkg/jwt"
-	"hellonil/pkg/snowflake"
 	"net/http"
 )
+
+func responseLogin(c *gin.Context, codeErr int, userId int64, token string) {
+	zap.L().Info(codeString[codeErr])
+	c.JSON(http.StatusOK, gin.H{
+		"status_code": 0,
+		"status_msg":  codeString[codeErr],
+		"user_id":     userId,
+		"token":       token,
+	})
+}
 
 func Register(c *gin.Context) {
 	//获取用户名或密码
@@ -15,54 +25,64 @@ func Register(c *gin.Context) {
 	password := c.Query("password")
 	//判断长度
 	if len(username) >= 32 || len(password) >= 32 {
-		c.JSON(http.StatusOK, gin.H{
-			"status_code": 0,
-			"status_msg":  CodeUserToLength,
-			"user_id":     0,
-			"token":       "",
-		})
+		responseLogin(c, CodeUserToLength, 0, "")
 		return
 	}
-
-	//判断用户是否存在
-	err := mysql.CheckUserExist(username)
-
-	//雪花算法生成用户ID
-	user_id := snowflake.GenID()
-	//md5算法对密码加密
-	tk, err := jwt.GenToken(user_id, username)
+	accounts := &models.Accounts{ //新建一个account用户结构体
+		Username: username,
+		Password: password,
+	}
+	if !mysql.CheckUserExist(accounts) { //判断用户是否存在，不存在就新建
+		err := mysql.InsertAccounts(accounts)
+		if err != nil {
+			return
+		}
+	} else {
+		responseLogin(c, CodeUserExist, accounts.ID, "")
+		return
+	}
+	tk, err := jwt.GenToken(accounts.ID, username) //生成token
 	if err != nil {
 		//日志
 		return
 	}
-
-	//插入数据进数据库
-	err = mysql.InsertUser()
-
-	c.JSON(http.StatusOK, gin.H{
-		"status_code": 0,
-		"status_msg":  "注册成功",
-		"user_id":     user_id,
-		"token":       tk,
-	})
-	c.Set(tk, username)
-	un, err := jwt.ParseToken(tk)
+	//将用户信息插入到users表中
+	err = mysql.InsertUsers(accounts)
 	if err != nil {
+		responseLogin(c, CodeServerBusy, 0, "") //返回服务器信息繁忙
 		return
 	}
-	fmt.Println(c.Keys[tk], un.Username)
+	responseLogin(c, CodeRegisterOk, accounts.ID, tk)
+	c.Set(tk, username)
+	return
 }
 
 func Login(c *gin.Context) {
 	username := c.Query("username")
 	password := c.Query("password")
 	if len(username) >= 32 || len(password) >= 32 {
-		c.JSON(http.StatusOK, gin.H{
-			"status_code": 0,
-			"status_msg":  CodeUserToLength,
-			"user_id":     0,
-			"token":       "",
-		})
+		responseLogin(c, CodeUserToLength, 0, "")
 		return
 	}
+	accounts := &models.Accounts{ //新建一个account用户结构体
+		Username: username,
+		Password: password,
+	}
+	pd := password
+	if !mysql.CheckUserExist(accounts) { //如果不存在返回错误
+		responseLogin(c, CodeUserNotExist, 0, "")
+	}
+	accounts.Password = pd
+	//登录
+	err := mysql.CheckPassWord(accounts)
+	if err != nil {
+		responseLogin(c, CodeInvalidPassword, 0, "")
+		return
+	}
+	tk, err := jwt.GenToken(accounts.ID, username)
+	if err != nil {
+		zap.L().Fatal("用户登录生成token失败")
+		return
+	}
+	responseLogin(c, CodeLoginOk, accounts.ID, tk)
 }

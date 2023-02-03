@@ -13,14 +13,6 @@ import (
 	"os"
 )
 
-// @title bluebell项目接口文档
-// @version 1.0
-
-// @contact.name liwenzhou
-// @contact.url http://www.liwenzhou.com
-
-// @host 127.0.0.1:8084
-
 func Init() {
 	if len(os.Args) < 2 {
 		fmt.Println("need config file.eg: hellonil config.yaml")
@@ -68,4 +60,5 @@ func Init() {
 func main() {
 	//获取项目的执行路径
 	Init()
+
 }
