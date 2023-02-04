@@ -3,6 +3,8 @@ package controller
 const (
 	CodeStatusOK = iota
 	CodeStatusFail
+	CodeServerFail
+
 	CodeSuccess
 	CodeInvalidParam
 	CodeLoginOk
@@ -33,6 +35,7 @@ const (
 var codeString = map[int]string{
 	CodeSuccess:      "success",
 	CodeInvalidParam: "请求参数错误",
+	CodeServerFail:   "服务器内部出错",
 
 	CodeRegisterOk:      "注册成功",
 	CodeUserToLength:    "用户名或密码过长",

@@ -26,5 +26,4 @@ func FeedSearch(c *gin.Context) {
 	if err != nil {
 		return
 	}
-
 }
