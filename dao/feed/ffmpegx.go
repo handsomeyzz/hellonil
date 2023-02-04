@@ -69,7 +69,6 @@ func savePic(path string) (picPath string, err error) {
 // 处理视频的函数，传入视频路径
 func DealVideo(path string) (videoPath string, picPath string, err error) {
 	encode, _, err := encodeAndTime(path)
-	fmt.Println(encode, err)
 	videopath := path
 	if encode != "h264" {
 		//降低码率

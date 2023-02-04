@@ -31,7 +31,7 @@ type Message struct {
 	ID         int64     `db:"id"`
 	FromUserID int64     `db:"from_user_id"`
 	ToUserID   int64     `db:"to_user_id"`
-	Content    int64     `db:"content"`
+	Content    string    `db:"content"`
 	CreatDate  time.Time `db:"creat_date"`
 }
 type Users struct {
@@ -40,14 +40,16 @@ type Users struct {
 	FollowCount   int64  `db:"follow_count"`
 	FollowerCount int64  `db:"follower_count"`
 	Avatar        string `db:"avatar"`
+	Name          string `json:"name"`
 }
 
-type videos struct {
-	ID            int64  `db:"id"`
-	AuthorID      int64  `db:"author_id"`
-	PlayUrl       int64  `db:"play_url"`
-	CoverUrl      int64  `db:"cover_url"`
-	FavoriteCount int64  `db:"favorite_count"`
-	CommentCount  int64  `db:"comment_count"`
-	title         string `db:"title"`
+type Videos struct {
+	ID            int64     `db:"id"`
+	AuthorID      int64     `db:"author_id"`
+	PlayUrl       string    `db:"play_url"`
+	CoverUrl      string    `db:"cover_url"`
+	FavoriteCount int64     `db:"favorite_count"`
+	CommentCount  int64     `db:"comment_count"`
+	Title         string    `db:"title"`
+	CreateTime    time.Time `db:"create_time"`
 }

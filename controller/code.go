@@ -1,9 +1,10 @@
 package controller
 
 const (
-	CodeSuccess = iota
+	CodeStatusOK = iota
+	CodeStatusFail
+	CodeSuccess
 	CodeInvalidParam
-
 	CodeLoginOk
 	CodeUserToLength
 	CodeUserExist

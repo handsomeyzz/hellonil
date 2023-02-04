@@ -50,7 +50,6 @@ func Upload(targetName string, path string) (url string, err error) {
 	}
 	//删除本地文件
 	u, ok := viper.Get("cos.host").(string)
-	fmt.Println(u)
 	if !ok {
 		fmt.Println("viper类型断言出错了！")
 		return "", nil

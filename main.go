@@ -58,7 +58,5 @@ func Init() {
 }
 
 func main() {
-	//获取项目的执行路径
 	Init()
-
 }

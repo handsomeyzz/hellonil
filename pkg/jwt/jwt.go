@@ -2,7 +2,6 @@ package jwt
 
 import (
 	"errors"
-	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"hellonil/setting"
 	"time"
@@ -52,7 +51,6 @@ func ParseToken(tokenString string) (*MyClaims, error) {
 		return []byte(jwtMsg.SecretKey), nil
 	})
 	if err != nil {
-		fmt.Println(err)
 		return nil, err
 	}
 	if token.Valid { // 校验token
