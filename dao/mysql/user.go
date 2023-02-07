@@ -4,8 +4,10 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"errors"
+	"go.uber.org/zap"
 	"hellonil/models"
 	"hellonil/pkg/snowflake"
+	"hellonil/responseStruct"
 )
 
 const md5sectret = "hellonil"
@@ -17,10 +19,13 @@ func encryptPassword(oPassword string) string {
 	return hex.EncodeToString(h.Sum([]byte(oPassword)))
 }
 
+// CommentAction
+
 // 判断用户存在与否,存在返回true
-func CheckUserExist(user *models.Accounts) bool {
-	sqlStr := `select id,username,password from accounts where username = ?`
-	err := db.Get(user, sqlStr, user.Username)
+func CheckUserExist(username string) bool {
+	sqlStr := `select id from accounts where username = ?`
+	var id int64
+	err := db.Get(&id, sqlStr, username)
 	if err == nil {
 		//说明用户存在
 		return true
@@ -65,4 +70,46 @@ func InsertUsers(user *models.Accounts) (err error) {
 		return err
 	}
 	return nil
+}
+
+func PublishList(user_id int64) (vlist []*responseStruct.Video, err error) {
+	var u responseStruct.User
+	sqlstr1 := `select user_id,name,follow_count,follower_count from users where user_id=?`
+	err = db.Get(&u, sqlstr1, user_id)
+	if err != nil {
+		zap.L().Info("查询用户信息失败", zap.Error(err))
+		return nil, err
+	}
+
+	sqlstr := `select id,play_url,cover_url,favorite_count,comment_count,title from videos where author_id = ?`
+	rows, err := db.Query(sqlstr, user_id)
+	if err != nil {
+		zap.L().Info("发布信息查询失败:", zap.Error(err))
+		return nil, err
+	}
+	length := 0
+	vlist = make([]*responseStruct.Video, 0, 100)
+	for rows.Next() {
+		var temp responseStruct.Video
+		err = rows.Scan(&temp.ID, &temp.PlayUrl, &temp.CoverUrl, &temp.FavoriteCount, &temp.CommentCount, &temp.Title)
+		temp.Author = u
+		if err != nil {
+			zap.L().Info("扫描信息失败", zap.Error(err))
+			return nil, err
+		}
+		length++
+		vlist = append(vlist, &temp)
+	}
+	return vlist, nil
+}
+
+func SearchUserMsg(uid int) (userMsg *responseStruct.User, err error) {
+	sql := `select user_id,name,follow_count,follower_count from users where user_id=?`
+	var reu responseStruct.User
+	err = db.Get(&reu, sql, uid)
+	if err != nil {
+		zap.L().Info("用户数据查询失败！错误为：", zap.Error(err))
+		return nil, err
+	}
+	return &reu, nil
 }

@@ -21,12 +21,17 @@ func SetupRouter(mode string) *gin.Engine {
 		c.JSON(http.StatusOK, "OK!")
 	})
 	//r.Group("/douyin")
-	r.GET("/douyin/feed/", controller.FeedSearch)
+	r.GET("/douyin/feed/", controller.FeedSearch)               //feed流接口
 	r.POST("/douyin/user/register/", controller.Register)       //用户注册
 	r.POST("/douyin/user/login/", controller.Login)             //用户登录
 	r.POST("/douyin/publish/action/", controller.PublishAction) //投稿
-	r.POST("/favorite/action/", controller.Approve)             //点赞
-	r.GET("/user/", controller.UserMsg)
+	r.POST("/douyin/favorite/action/", controller.Approve)      //点赞
+	r.GET("/douyin/publish/list/", controller.PublishList)      //发布列表
+	r.POST("/douyin/comment/action/", controller.CommentAction)
+	r.GET("/douyin/user/", controller.UserMsg)
+
+	//社交接口
+	r.POST("/douyin/relation/action/", controller.FollowAction)
 
 	pprof.Register(r) // 注册pprof相关路由
 

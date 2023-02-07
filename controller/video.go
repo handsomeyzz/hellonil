@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"hellonil/dao/feed"
@@ -39,20 +38,20 @@ func PublishAction(c *gin.Context) {
 	title := tt[0]
 	if token == "" {
 		zap.L().Info("上传视频时token校验失败")
-		publish(c, "文件上传失败!参数不符合规定", CodeStatusFail)
+		publish(c, codeString[CodeUpParamFail], CodeStatusFail)
 		return
 	} else { //鉴权
 		myC, err := jwt.ParseToken(token)
 		if err != nil {
 			zap.L().Info("上传视频时token校验失败")
-			publish(c, "文件上传失败!参数不符合规定", CodeStatusFail)
+			publish(c, codeString[CodeUpParamFail], CodeStatusFail)
 			return
 		}
 		zap.L().Info("用户鉴权成功,用户名为", zap.Stack(myC.Username))
 	}
 	if err != nil {
 		zap.L().Info("err:up video failed and ", zap.Error(err))
-		publish(c, "文件上传失败!", CodeStatusFail)
+		publish(c, codeString[CodeUploadFail], CodeStatusFail)
 		return
 	}
 	mc, _ := jwt.ParseToken(token)
@@ -62,13 +61,20 @@ func PublishAction(c *gin.Context) {
 	err = c.SaveUploadedFile(video, dst)
 	if err != nil {
 		zap.L().Info("err:save file and ", zap.Error(err))
-		publish(c, "文件上传失败!", CodeStatusFail)
+		publish(c, codeString[CodeUploadFail], CodeStatusFail)
 		return
 	}
+	publish(c, codeString[CodeUploadSuccess], CodeStatusOK)
+	zap.L().Info("文件上传成功！")
+	//解析并上传
+	parseVideoUpload(c, dst, username, title, mc.UserID)
+}
+
+func parseVideoUpload(c *gin.Context, dst, username, title string, id int64) {
 	videoPath, picPath, err := feed.DealVideo(dst)
 	if err != nil {
 		zap.L().Info("文件处理失败")
-		publish(c, "文件上传失败!", CodeStatusFail)
+		publish(c, codeString[CodeUploadFail], CodeStatusFail)
 		return
 	}
 	//上传视频
@@ -78,7 +84,7 @@ func PublishAction(c *gin.Context) {
 	picUrl, err := feed.Upload(pname, picPath)
 	err = os.Remove(dst)
 	videoStruct := &models.Videos{
-		AuthorID:      mc.UserID,
+		AuthorID:      id,
 		PlayUrl:       videoUrl,
 		CoverUrl:      picUrl,
 		FavoriteCount: 0,
@@ -89,9 +95,7 @@ func PublishAction(c *gin.Context) {
 	err = mysql.InsertVideo(videoStruct)
 	if err != nil {
 		zap.L().Info("文件上传时数据插入失败")
-		publish(c, "文件上传失败", CodeStatusFail)
+		publish(c, codeString[CodeUploadFail], CodeStatusFail)
 		return
 	}
-	publish(c, "上传成功！", CodeStatusOK)
-	fmt.Println("上传欧克")
 }

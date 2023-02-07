@@ -20,6 +20,7 @@ const (
 	//上传列表
 	CodeUploadSuccess
 	CodeUploadFail
+	CodeUpParamFail
 
 	//评论
 	CodeCommentSuccess
@@ -49,8 +50,9 @@ var codeString = map[int]string{
 	CodeNeedLogin:    "需要登录",
 	CodeInvalidToken: "无效的token",
 	//上传列表
-	CodeUploadSuccess: "",
-	CodeUploadFail:    "",
+	CodeUploadSuccess: "文件上传成功",
+	CodeUploadFail:    "文件上传失败",
+	CodeUpParamFail:   "文件上传失败!参数不符合规定",
 
 	//评论
 	CodeCommentSuccess: "",

@@ -3,27 +3,13 @@ package mysql
 import (
 	"go.uber.org/zap"
 	"hellonil/models"
+	"hellonil/pkg/jwt"
+	"hellonil/responseStruct"
+	"math/rand"
+	"time"
 )
 
-type Video struct {
-	ID            int64  `json:"id"`
-	FavoriteCount int64  `json:"favorite_count"`
-	CommentCount  int64  `json:"comment_count"`
-	PlayUrl       string `json:"play_url"`
-	CoverUrl      string `json:"cover_url"`
-	Title         string `json:"title"`
-	IsFavorite    bool   `json:"is_favorite"`
-	Author        User   `json:"author"`
-}
-type User struct {
-	ID            int64  `json:"id"`
-	FollowCount   int64  `json:"follow_count"`
-	FollowerCount int64  `json:"follower_count"`
-	Name          string `json:"name"`
-	IsFollow      bool   `json:"is_follow"`
-}
-
-func SearchFeed(myfeed []*Video, isOk bool) (err error) {
+func SearchFeed(isOk bool, token string) (res []*responseStruct.Video, err error) {
 	//1.取视频id和作者id
 	sqlstr1 := `select id,author_id from videos`
 	rows, err := db.Query(sqlstr1)
@@ -43,11 +29,12 @@ func SearchFeed(myfeed []*Video, isOk bool) (err error) {
 		err = db.Select(&u, sqlstr2, v)
 		if err != nil {
 			zap.L().Info("Feed流视频查询失败1")
-			return
+			return nil, err
 		}
 		u_u[v] = u[0]
 		user = append(user, u[0])
 	}
+	//fmt.Println("u_u:", u_u)
 	//3。查询视频信息
 	var videos []models.Videos
 	v_v := make(map[int64]models.Videos, 100)
@@ -62,15 +49,18 @@ func SearchFeed(myfeed []*Video, isOk bool) (err error) {
 		v_v[k] = v[0]
 		videos = append(videos, v[0])
 	}
+	//fmt.Println("v_v:", v_v)
 	//4.组合
+	res = make([]*responseStruct.Video, 0, 100)
 	for k, v := range VidAid {
-		temp := Video{
+		temp := responseStruct.Video{
 			ID: k,
-			Author: User{
-				ID:          v,
-				Name:        u_u[v].Name,
-				FollowCount: u_u[v].FollowCount,
-				IsFollow:    false, //暂时为false
+			Author: responseStruct.User{
+				ID:            v,
+				Name:          u_u[v].Name,
+				FollowCount:   u_u[v].FollowCount,
+				FollowerCount: u_u[v].FollowerCount,
+				IsFollow:      false, //暂时为false
 			},
 			PlayUrl:       v_v[k].PlayUrl,
 			CoverUrl:      v_v[k].CoverUrl,
@@ -79,22 +69,106 @@ func SearchFeed(myfeed []*Video, isOk bool) (err error) {
 			IsFavorite:    false, //暂时为false
 			Title:         v_v[k].Title,
 		}
-		myfeed = append(myfeed, &temp)
+		res = append(res, &temp)
 	}
 	//3.当前用户是否有token
 	if isOk == false {
-		if len(myfeed) >= 30 {
-			myfeed = myfeed[:30]
+		if len(res) >= 30 {
+			res = res[:30]
 		}
-	} else { //有token
-
+	} else { //有token,解析token
+		myc, err := jwt.ParseToken(token)
+		if err != nil {
+			zap.L().Info("解析token出错！")
+			return nil, err
+		}
+		username := myc.Username
+		SearchIsLike(res, username)
+		SearchIsFollow(res, username)
+		if len(res) >= 30 {
+			rand.Seed(time.Now().Unix())
+			length := len(res) - 30
+			randomMath := rand.Intn(length)
+			res = res[randomMath : randomMath+30]
+		}
 	}
 
-	return nil
+	return res, nil
 }
 
-func SearchIsLike(myfeed []*Video, username string) {
-	//1.查询用户对视频是否喜爱
-	//sqlstr1 := `select id from accounts where username = username`
+// 查询用户对视频是否喜爱
+func SearchIsLike(myfeed []*responseStruct.Video, username string) {
+	sqlstr1 := `select video_id from likes where user_id= (SELECT id  FROM accounts WHERE username=?)`
+	likeList := make([]int64, 100) //当前用户的喜欢列表
+	rows, err := db.Query(sqlstr1, username)
+	if err != nil {
+		zap.L().Info("查询时发生错误！")
+		return
+	}
+	length := 0
+	for rows.Next() {
+		err = rows.Scan(&likeList[length])
+		if err != nil {
+			zap.L().Info("数据扫描时导入发生错误！")
+			return
+		}
+		length++
+	}
+	for i, t := 0, len(myfeed); i < t; i++ {
+		for j := 0; j < length; j++ {
+			if likeList[j] == myfeed[i].ID {
+				myfeed[i].IsFavorite = true
+			}
+		}
+	}
+}
 
+// 查询用户对作者是否关注
+func SearchIsFollow(myfeed []*responseStruct.Video, username string) {
+	sqlStr := `select target_id from follows where user_id=(SELECT id  FROM accounts WHERE username=?)`
+	followsList := make([]int64, 100) //当前用户的喜欢列表
+	rows, err := db.Query(sqlStr, username)
+	if err != nil {
+		zap.L().Info("查询时发生错误！")
+		return
+	}
+	length := 0
+	for rows.Next() {
+		err = rows.Scan(&followsList[length])
+		if err != nil {
+			zap.L().Info("数据扫描时导入发生错误！")
+			return
+		}
+		length++
+	}
+	for i, t := 0, len(myfeed); i < t; i++ {
+		for j := 0; j < length; j++ {
+			if followsList[j] == myfeed[i].Author.ID {
+				myfeed[i].Author.IsFollow = true //is_follow为true
+			}
+		}
+	}
+}
+
+// 查询关注数量
+func SearchFollowCount(myfeed []*responseStruct.Video, username string) {
+	sqlstr := `select count(target_id) from follows where  target_id=(select id from accounts where username =?)`
+	var count int64
+	rows, err := db.Query(sqlstr, username)
+	if err != nil {
+		zap.L().Info("查询函数SearchFollowCount查询时发生错误！")
+		return
+	}
+	for rows.Next() {
+		err = rows.Scan(&count)
+		if err != nil {
+			zap.L().Info("查询函数SearchFollowCount数据扫描时导入发生错误！")
+			return
+		}
+	}
+	for i, t := 0, len(myfeed); i < t; i++ {
+		if myfeed[i].Author.Name == username {
+			myfeed[i].Author.FollowerCount = count
+		}
+	}
 }

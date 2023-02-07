@@ -2,10 +2,10 @@ package responseStruct
 
 // /douyin/feed/  和/douyin/publish/list/ 和/douyin/favorite/list
 type DouYinResponse struct {
-	StatusCode int32   `json:"status_code"`
-	StatusMsg  string  `json:"status_msg,omitempty"`
-	VideoList  []Video `json:"video_list"`
-	NextTime   int64   `json:"next_time,omitempty"`
+	StatusCode int32    `json:"status_code"`
+	StatusMsg  string   `json:"status_msg,omitempty"`
+	VideoList  []*Video `json:"video_list"`
+	NextTime   int64    `json:"next_time,omitempty"`
 }
 
 type Video struct {
@@ -20,11 +20,11 @@ type Video struct {
 }
 
 type User struct {
-	ID            int64  `json:"id"`
-	FollowCount   int64  `json:"follow_count,omitempty"`
-	FollowerCount int64  `json:"follower_count,omitempty"`
-	Name          string `json:"name"`
-	IsFollow      bool   `json:"is_follow,omitempty"`
+	ID            int64  `json:"id" db:"user_id"`
+	FollowCount   int64  `json:"follow_count" db:"follow_count"`
+	FollowerCount int64  `json:"follower_count" db:"follower_count"`
+	Name          string `json:"name" db:"name" db:"name"`
+	IsFollow      bool   `json:"is_follow" db:"is_follow"`
 }
 
 // /douyin/user/register 和  /douyin/user/login

@@ -16,3 +16,13 @@ func InsertVideo(video *models.Videos) (err error) {
 	}
 	return nil
 }
+
+func CheckVidExist(vid int64) bool {
+	sqlstr := `select id from videos where id = ?`
+	var v int64
+	err := db.Get(&v, sqlstr, vid)
+	if err == nil {
+		return true
+	}
+	return false
+}

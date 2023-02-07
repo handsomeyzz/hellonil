@@ -40,7 +40,7 @@ type Users struct {
 	FollowCount   int64  `db:"follow_count"`
 	FollowerCount int64  `db:"follower_count"`
 	Avatar        string `db:"avatar"`
-	Name          string `json:"name"`
+	Name          string `db:"name"`
 }
 
 type Videos struct {
