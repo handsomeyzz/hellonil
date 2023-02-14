@@ -34,7 +34,6 @@ func SearchFeed(isOk bool, token string) (res []*responseStruct.Video, err error
 		u_u[v] = u[0]
 		user = append(user, u[0])
 	}
-	//fmt.Println("u_u:", u_u)
 	//3。查询视频信息
 	var videos []models.Videos
 	v_v := make(map[int64]models.Videos, 100)
@@ -49,7 +48,6 @@ func SearchFeed(isOk bool, token string) (res []*responseStruct.Video, err error
 		v_v[k] = v[0]
 		videos = append(videos, v[0])
 	}
-	//fmt.Println("v_v:", v_v)
 	//4.组合
 	res = make([]*responseStruct.Video, 0, 100)
 	for k, v := range VidAid {
@@ -69,6 +67,7 @@ func SearchFeed(isOk bool, token string) (res []*responseStruct.Video, err error
 			IsFavorite:    false, //暂时为false
 			Title:         v_v[k].Title,
 		}
+
 		res = append(res, &temp)
 	}
 	//3.当前用户是否有token

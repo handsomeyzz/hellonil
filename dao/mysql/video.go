@@ -1,7 +1,7 @@
 package mysql
 
 import (
-	"fmt"
+	"go.uber.org/zap"
 	"hellonil/models"
 	"hellonil/pkg/snowflake"
 )
@@ -11,7 +11,7 @@ func InsertVideo(video *models.Videos) (err error) {
 	id := snowflake.GenID()
 	_, err = db.Exec(sqlStr, id, video.AuthorID, video.PlayUrl, video.CoverUrl, video.FavoriteCount, video.CommentCount, video.Title, video.CreateTime)
 	if err != nil {
-		fmt.Println(err)
+		zap.L().Info("插入视频数据失败", zap.Error(err))
 		return err
 	}
 	return nil

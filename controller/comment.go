@@ -26,7 +26,8 @@ func CommentAction(c *gin.Context) {
 		responseFail(c, 1, "获取信息失败，请稍后重试", nil)
 		return
 	}
-	username := myc.Username             //获取用户名
+
+	username := myc.Username
 	if !mysql.CheckUserExist(username) { //查询数据库用户存在与否，不存在就记录
 		zap.L().Info("用户不存在，请重新操作")
 		responseFail(c, 1, "用户不存在，请重新操作", nil)
@@ -83,4 +84,23 @@ func CommentAction(c *gin.Context) {
 		responseFail(c, 1, "评论有误，请稍后重试", nil)
 		return
 	}
+}
+
+func CommentList(c *gin.Context) {
+	video := c.Query("video_id")
+	videoId, _ := strconv.ParseInt(video, 10, 64)
+	myc, err := jwt.ParseToken(c.Query("token")) //解析token，失败就返回并记录错误
+	if err != nil {
+		zap.L().Info("token有误！错误为:", zap.Error(err))
+		responseFail(c, 1, "获取信息失败，请稍后重试", nil)
+		return
+	}
+	userId := myc.UserID
+	commentList := mysql.GetCommentListAndUserList(uint64(videoId), uint64(userId))
+	zap.L().Info(commentList[0].Content)
+	c.JSON(http.StatusOK, gin.H{
+		"status_code":  0,
+		"status_msg":   "",
+		"comment_list": commentList,
+	})
 }

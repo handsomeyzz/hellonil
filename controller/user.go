@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"hellonil/dao/mysql"
@@ -39,6 +38,7 @@ func Register(c *gin.Context) {
 	if !mysql.CheckUserExist(accounts.Username) { //判断用户是否存在，不存在就新建
 		err := mysql.InsertAccounts(accounts)
 		if err != nil {
+			responseLogin(c, CodeUserExist, accounts.ID, "", CodeStatusFail)
 			return
 		}
 	} else {
@@ -141,6 +141,7 @@ func responseUserMsg(c *gin.Context, statusCode int32, statusMsg string, user *r
 	})
 }
 
+// 基础接口/用户信息
 func UserMsg(c *gin.Context) {
 	token, user_id := c.Query("token"), c.Query("user_id")
 	uid, err := strconv.Atoi(user_id)
@@ -159,7 +160,6 @@ func UserMsg(c *gin.Context) {
 		responseUserMsg(c, 1, "用户信息有误，请重新请求！", nil)
 		return
 	}
-	fmt.Println(uid)
 	res, err := mysql.SearchUserMsg(uid)
 	if err != nil {
 		responseUserMsg(c, 1, "用户信息有误", nil)

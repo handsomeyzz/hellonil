@@ -11,6 +11,7 @@ import (
 
 var (
 	client *redis.Client
+	ctx    = context.Background()
 )
 
 // Init 初始化连接
@@ -23,7 +24,7 @@ func Init(cfg *setting.RedisConfig) (err error) {
 		MinIdleConns: cfg.MinIdleConns,
 	})
 
-	_, err = client.Ping(context.Background()).Result()
+	_, err = client.Ping(ctx).Result()
 	if err != nil {
 		return err
 	}

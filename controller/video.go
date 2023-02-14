@@ -73,7 +73,7 @@ func PublishAction(c *gin.Context) {
 func parseVideoUpload(c *gin.Context, dst, username, title string, id int64) {
 	videoPath, picPath, err := feed.DealVideo(dst)
 	if err != nil {
-		zap.L().Info("文件处理失败")
+		zap.L().Info("文件处理失败", zap.Error(err))
 		publish(c, codeString[CodeUploadFail], CodeStatusFail)
 		return
 	}

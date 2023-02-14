@@ -63,9 +63,9 @@ func CheckPassWord(user *models.Accounts) error {
 // 插入user数据进数据库
 func InsertUsers(user *models.Accounts) (err error) {
 	//生成id
-	userid := snowflake.GenID()
+	id := snowflake.GenID()
 	sqlStr := `insert into users(id,user_id,name,avatar,follow_count,follower_count) VALUES (?,?,?,?,?,?)`
-	_, err = db.Exec(sqlStr, userid, user.ID, user.Username, "", 0, 0)
+	_, err = db.Exec(sqlStr, id, user.ID, user.Username, "", 0, 0)
 	if err != nil {
 		return err
 	}
